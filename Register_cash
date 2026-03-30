@@ -1,0 +1,155 @@
+# ==================== ESTRUCTURAS DE DATOS ====================
+
+estudiantes = {}      # Diccionario principal  {id: {...}}
+historial   = []      # Lista de acciones realizadas
+contador_id = 1       # int para IDs únicos
+
+# ==================== GESTIÓN DE ESTUDIANTES ====================
+
+def registrar_estudiante(nombre: str, edad: int, curso: str) -> dict:
+    global contador_id
+    estudiante = {
+        "id":     contador_id,
+        "nombre": nombre,
+        "edad":   edad,
+        "curso":  curso,
+        "estado": True          # True = activo, False = inactivo
+    }
+    estudiantes[contador_id] = estudiante
+    historial.append(f"Registrado: {nombre} (ID {contador_id})")
+    contador_id += 1
+    return estudiante
+
+def consultar_estudiantes() -> list:
+    return list(estudiantes.values())
+
+def buscar_estudiante(criterio: str) -> list:
+    criterio = criterio.lower()
+    return [
+        e for e in estudiantes.values()
+        if str(e["id"]) == criterio or criterio in e["nombre"].lower()
+    ]
+
+def actualizar_estudiante(id_est: int, nombre: str = None,
+                          edad: int = None, curso: str = None,
+                          estado: bool = None) -> bool:
+    if id_est not in estudiantes:
+        return False
+    e = estudiantes[id_est]
+    if nombre is not None: e["nombre"] = nombre
+    if edad   is not None: e["edad"]   = edad
+    if curso  is not None: e["curso"]  = curso
+    if estado is not None: e["estado"] = estado
+    historial.append(f"Actualizado ID {id_est}")
+    return True
+
+def eliminar_estudiante(id_est: int) -> bool:
+    if id_est not in estudiantes:
+        return False
+    nombre = estudiantes.pop(id_est)["nombre"]
+    historial.append(f"Eliminado: {nombre} (ID {id_est})")
+    return True
+
+# ==================== VISUALIZACIÓN ====================
+
+def mostrar_estudiante(e: dict) -> None:
+    estado_str = "Activo" if e["estado"] else "Inactivo"
+    print(f"  ID: {e['id']} | {e['nombre']} | {e['edad']} años | "
+          f"{e['curso']} | {estado_str}")
+
+def mostrar_menu() -> None:
+    print("\n╔══════════════════════════════╗")
+    print("║  SISTEMA DE GESTIÓN RIWI     ║")
+    print("╠══════════════════════════════╣")
+    print("║  1. Registrar estudiante     ║")
+    print("║  2. Consultar estudiantes    ║")
+    print("║  3. Buscar estudiante        ║")
+    print("║  4. Actualizar estudiante    ║")
+    print("║  5. Eliminar estudiante      ║")
+    print("║  0. Salir                    ║")
+    print("╚══════════════════════════════╝")
+
+# ==================== LÓGICA DE CADA OPCIÓN ====================
+
+def opcion_registrar() -> None:
+    print("\n── Registrar estudiante ──")
+    nombre = input("Nombre: ").strip()
+    edad   = int(input("Edad: "))
+    curso  = input("Curso/Programa: ").strip()
+    e = registrar_estudiante(nombre, edad, curso)
+    print(f"✅ Estudiante registrado con ID {e['id']}")
+
+def opcion_consultar() -> None:
+    print("\n── Lista de estudiantes ──")
+    lista = consultar_estudiantes()
+    if not lista:
+        print("📭 No hay estudiantes registrados.")
+        return
+    for e in lista:
+        mostrar_estudiante(e)
+
+def opcion_buscar() -> None:
+    print("\n── Buscar estudiante ──")
+    criterio = input("Buscar por ID o nombre: ").strip()
+    resultados = buscar_estudiante(criterio)
+    if resultados:
+        for e in resultados:
+            mostrar_estudiante(e)
+    else:
+        print("❌ No se encontró ningún estudiante.")
+
+def opcion_actualizar() -> None:
+    print("\n── Actualizar estudiante ──")
+    id_est = int(input("ID del estudiante a actualizar: "))
+
+    nombre = input("Nuevo nombre (Enter para omitir): ").strip() or None
+    edad_s = input("Nueva edad   (Enter para omitir): ").strip()
+    edad   = int(edad_s) if edad_s else None
+    curso  = input("Nuevo curso  (Enter para omitir): ").strip() or None
+    est_s  = input("Estado 1=activo / 0=inactivo (Enter para omitir): ").strip()
+    estado = (est_s == "1") if est_s else None
+
+    if actualizar_estudiante(id_est, nombre, edad, curso, estado):
+        print("✅ Estudiante actualizado.")
+    else:
+        print("❌ ID no encontrado.")
+
+def opcion_eliminar() -> None:
+    print("\n── Eliminar estudiante ──")
+    id_est = int(input("ID del estudiante a eliminar: "))
+    if eliminar_estudiante(id_est):
+        print("🗑️ Estudiante eliminado.")
+    else:
+        print("❌ ID no encontrado.")
+
+# ==================== MENÚ SIN WHILE TRUE ====================
+
+def ejecutar_opcion(opcion: str) -> bool:
+    """Retorna False solo cuando el usuario elige salir."""
+    opciones = {
+        "1": opcion_registrar,
+        "2": opcion_consultar,
+        "3": opcion_buscar,
+        "4": opcion_actualizar,
+        "5": opcion_eliminar,
+    }
+    if opcion in opciones:
+        opciones[opcion]()      # Llama la función correspondiente
+        return True
+    elif opcion == "0":
+        print("👋 ¡Hasta luego!")
+        return False            # Señal de salida
+    else:
+        print("⚠️ Opción inválida.")
+        return True
+
+def main() -> None:
+    print("Bienvenido al Sistema de Gestión de Estudiantes")
+    continuar = True
+    while continuar:                          # Variable de control
+        mostrar_menu()
+        opcion = input("\nElige una opción: ").strip()
+        continuar = ejecutar_opcion(opcion)   # False solo al salir
+
+if __name__ == "__main__":
+    main()
